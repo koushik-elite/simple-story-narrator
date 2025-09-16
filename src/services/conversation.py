@@ -63,4 +63,35 @@ class ConversationManager:
         """
 
         try:
-            response = self.llm_clien_
+            response = self.llm_client.call_llm(prompt)
+            return response.strip().strip('"')
+        except Exception as e:
+            logger.error(f"Error generating response for {character_name}: {e}")
+            return f"[Error: could not generate response for {character_name}]"
+
+    def conduct_scene_conversation(
+        self,
+        characters: Dict[str, "Character"],
+        narration: str,
+        scene_context: Optional[str] = None,
+        conversation_rounds: int = 2,
+    ) -> List[Dict[str, str]]:
+        """
+        Conduct a multi-round conversation among the given characters.
+        """
+        conversation_results: List[Dict[str, str]] = []
+
+        for _ in range(conversation_rounds):
+            for char_name, char in characters.items():
+                response = self.generate_character_response(
+                    character_name=char_name,
+                    character=char,
+                    narration=narration,
+                    scene_context=scene_context,
+                    conversation_history=conversation_results,
+                )
+                turn = {"character": char_name, "response": response}
+                conversation_results.append(turn)
+                self.conversation_history.append(turn)
+
+        return conversation_results
