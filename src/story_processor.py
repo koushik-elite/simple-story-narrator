@@ -155,7 +155,7 @@ class StoryProcessor:
             narration = self.narrator.narrate_scene(story_input.context, scene)
 
             # Generate conversation
-            conversation = self.conversation_manager.conduct_scene(
+            conversation = self.conversation_manager.conduct_scene_conversation(
                 characters=story_input.characters,
                 narration=narration,
                 scene_context=scene.context,

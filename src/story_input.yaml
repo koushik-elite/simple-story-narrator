@@ -7,10 +7,10 @@ characters:
     goal: "To prove that giants can be gentle protectors, not just destroyers." 
     backstory: "Brick was awakened from a thousand-year slumber and wants to help others. He speaks slowly and thinks carefully, but has immense strength and a kind heart."
 scenes:
-  - scene no: 0
+  - scene_no: 0
     context: "The companions discover an ancient temple with three locked doors, each requiring a different approach to open."
 
 # Configuration options
 config:
-  conversation rounds: 2
-  output_ file: "output.yaml"
+  conversation_rounds: 2
+  output_file: "output.yaml"

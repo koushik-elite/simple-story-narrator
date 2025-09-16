@@ -1,0 +1,30 @@
+story_info:
+  context: 'In an enchanted valley where time moves differently, three unlikely companions
+    seek the legendary Crystal of Harmony. '
+  generated_at: '2025-09-16T17:09:59.351134'
+  total_scenes: 1
+  characters:
+  - Luna the Moon Mage
+  - Brick the Stone Giant
+scenes:
+- scene_no: 0
+  context: The companions discover an ancient temple with three locked doors, each
+    requiring a different approach to open.
+  narration:
+    narrator: ''
+  conversations:
+  - round: 1
+    exchanges:
+    - character: Luna the Moon Mage
+      text: ''
+    - character: Brick the Stone Giant
+      text: 'Three doors stand before us, each asking for a different truth: strength,
+        wisdom, and mercy. I woke to guard and help, not to crush; I will meet these
+        doors with patience and a steady heart so none are harmed. Let us listen to
+        the stone and let courage, insight, and kindness show us the path.'
+  - round: 2
+    exchanges:
+    - character: Luna the Moon Mage
+      text: ''
+    - character: Brick the Stone Giant
+      text: ''
