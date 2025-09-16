@@ -61,14 +61,9 @@ class ConversationManager:
 
         {character_name}'s response:
         """
-
-        try:
-            response = self.llm_client.call_llm(prompt)
-            return response.strip().strip('"')
-        except Exception as e:
-            logger.error(f"Error generating response for {character_name}: {e}")
-            return f"[Error: could not generate response for {character_name}]"
-
+        response = self.llm_client.call_llm(prompt)
+        return response.strip().strip('"')
+    
     def conduct_scene_conversation(
         self,
         characters: Dict[str, "Character"],
@@ -79,19 +74,31 @@ class ConversationManager:
         """
         Conduct a multi-round conversation among the given characters.
         """
-        conversation_results: List[Dict[str, str]] = []
+        conversation = []
+        character_names = list(characters.keys())
 
-        for _ in range(conversation_rounds):
-            for char_name, char in characters.items():
+        for round_num in range(conversation_rounds):
+            logger.info(f"Starting conversation round {round_num + 1}")
+
+            for character_name in character_names:
+                character = characters[character_name]
+
                 response = self.generate_character_response(
-                    character_name=char_name,
-                    character=char,
+                    character_name=character_name,
+                    character=character,
                     narration=narration,
                     scene_context=scene_context,
-                    conversation_history=conversation_results,
+                    conversation_history=conversation,
                 )
-                turn = {"character": char_name, "response": response}
-                conversation_results.append(turn)
-                self.conversation_history.append(turn)
 
-        return conversation_results
+                character_entry = {
+                    "round": round_num + 1,
+                    "character": character_name,
+                    "response": response
+                }
+                conversation.append(character_entry)
+        return conversation
+
+    def reset_conversation_history(self):
+        """Reset the conversation history."""
+        self.conversation_history = []
