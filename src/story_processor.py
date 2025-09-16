@@ -121,3 +121,89 @@ class StoryProcessor:
         logger.info(f"Created conversations between {len(config['characters'])} characters")
         logger.info(f"Results saved to: {output_file}")
 
+    def process_story(self, config: Dict[str, Any]) -> Dict[str, Any]:
+        """Process the story and generate narration and conversations."""
+
+        # Create StoryInput object
+        story_input = StoryInput(
+            context=config["context"],
+            characters=config["characters"],
+            scenes=config["scenes"]
+        )
+
+        # Get configuration options
+        story_config = config.get("config", {})
+        conversation_rounds = story_config.get("conversation_rounds", 2)
+
+        # Prepare output structure
+        output_data: Dict[str, Any] = {
+            "story_info": {
+                "context": config["context"],
+                "generated_at": datetime.now().isoformat(),
+                "total_scenes": len(config["scenes"]),
+                "characters": list(config["characters"].keys()),
+            },
+            "scenes": []
+        }
+
+        logger.info(f"Processing {len(story_input.scenes)} scenes...")
+
+        for scene in story_input.scenes:
+            logger.info(f"Processing scene {scene.scene_no}")
+
+            # Generate narration
+            narration = self.narrator.narrate_scene(story_input.context, scene)
+
+            # Generate conversation
+            conversation = self.conversation_manager.conduct_scene(
+                characters=story_input.characters,
+                narration=narration,
+                scene_context=scene.context,
+                conversation_rounds=conversation_rounds,
+            )
+
+            # Structure the scene output
+            scene_output = {
+                "scene_no": scene.scene_no,
+                "context": scene.context,
+                "narration": {
+                    "narrator": narration
+                },
+                "conversations": []
+            }
+
+            # Group conversations by round
+            current_round = 1
+            round_conversations = []
+
+            for entry in conversation:
+                if entry["round"] != current_round:
+                    if round_conversations:
+                        scene_output["conversations"].append({
+                            "round": current_round,
+                            "exchanges": round_conversations
+                        })
+                    current_round = entry["round"]
+                    round_conversations = []
+
+                round_conversations.append({
+                    "character": entry["character"],
+                    "text": entry["response"]
+                })
+
+            # Add the last round
+            if round_conversations:
+                scene_output["conversations"].append({
+                    "round": current_round,
+                    "exchanges": round_conversations
+                })
+
+            # Append this scene to output
+            output_data["scenes"].append(scene_output)
+
+            # Reset conversation history for next scene
+            self.conversation_manager.reset_conversation_history()
+
+        logger.info("Story processing completed")
+        return output_data
+
