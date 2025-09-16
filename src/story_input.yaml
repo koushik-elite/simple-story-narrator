@@ -1,0 +1,16 @@
+context: "In an enchanted valley where time moves differently, three unlikely companions seek the legendary Crystal of Harmony. "
+characters:
+  "Luna the Moon Mage":
+    goal: "To restore balance to the magical realms and prevent the eternal darkness prophecy." 
+    backstory: "Luna draws power from moonlight and has studied ancient prophecies for centuries. She is wise but sometimes impatient with those who don't understand magic."
+  "Brick the Stone Giant":
+    goal: "To prove that giants can be gentle protectors, not just destroyers." 
+    backstory: "Brick was awakened from a thousand-year slumber and wants to help others. He speaks slowly and thinks carefully, but has immense strength and a kind heart."
+scenes:
+  - scene no: 0
+    context: "The companions discover an ancient temple with three locked doors, each requiring a different approach to open."
+
+# Configuration options
+config:
+  conversation rounds: 2
+  output_ file: "output.yaml"

@@ -207,3 +207,16 @@ class StoryProcessor:
         logger.info("Story processing completed")
         return output_data
 
+def main():
+    """Command line entry point."""
+    # Parse command line arguments
+    input_file = sys.argv[1] if len(sys.argv) > 1 else "story_input.yaml"
+    output_file = sys.argv[2] if len(sys.argv) > 2 else "output.yaml"
+
+    # Create and run processor
+    processor = StoryProcessor()
+    processor.run(input_file, output_file)
+
+
+if __name__ == "__main__":
+    main()
