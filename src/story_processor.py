@@ -151,6 +151,7 @@ class StoryProcessor:
         for scene in story_input.scenes:
             logger.info(f"Processing scene {scene.scene_no}")
 
+            conversation_rounds = scene.max_conversations if scene.max_conversations else conversation_rounds
             # Generate narration
             narration = self.narrator.narrate_scene(story_input.context, scene)
 
@@ -158,7 +159,7 @@ class StoryProcessor:
             conversation = self.conversation_manager.conduct_scene_conversation(
                 characters=story_input.characters,
                 narration=narration,
-                scene_context=scene.context,
+                scene=scene,
                 conversation_rounds=conversation_rounds,
             )
 

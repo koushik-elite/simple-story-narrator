@@ -16,7 +16,7 @@ class Narrator:
     def narrate_scene(self, context: str, scene: 'Scene') -> str:
         """Generate narration for a given scene."""
 
-        prompt = textwrap.dedent(f"""
+        prompt = f"""
             Objective:
             - Given the story context and the current scene, narrate the scene in a captivating way.
 
@@ -25,7 +25,18 @@ class Narrator:
             ------------------------------------------------------------------
             Current Scene:
             {scene.context}
-        """)
+            
+            Scene Details:
+            - Location: {scene.location}
+            - Atmosphere: {scene.atmosphere}
+            - Conflict: {scene.conflict}
+            - Possible Outcomes: {scene.possible_outcomes}
+
+            narrator's response:
+        """
+
         response = self.llm_client.call_llm(prompt)
+        print("--------------------------------------------------------------------")
+        print(response)
         return response
 

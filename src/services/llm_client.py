@@ -1,4 +1,3 @@
-
 import logging
 import os
 from pydantic import BaseModel
@@ -25,12 +24,9 @@ def get_llm_config() -> LLMConfig:
     return LLMConfig(
         model="gpt-5-nano",
         temperature=1,
-        max_tokens=1024,
+        max_tokens=10024,
         api_key=os.environ.get("OPENAI_API_KEY", ""),
-        base_url=os.environ.get(
-            "OPENAI_BASE_URL",
-            ""
-        ),
+        base_url=os.environ.get("OPENAI_BASE_URL", ""),
     )
 
 
@@ -40,6 +36,7 @@ class LLMClient:
         # Configure litellm with custom base URL
         litellm.api_base = self.config.base_url
         litellm.api_key = self.config.api_key
+        print(self.config.base_url)
 
     def call_llm(self, prompt: str) -> str:
         """Call the LLM with the given prompt and return the response."""
