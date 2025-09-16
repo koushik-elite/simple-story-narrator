@@ -1,6 +1,6 @@
-# simple-story-narrator
+# Simple Story Narrator
 
-**simple-story-narrator** is a Python tool that generates narrated scenes and character-driven conversations for stories, using Large Language Models (LLMs). You provide a YAML file describing the story context, characters, and scenes; the system outputs a structured YAML file with scene narrations and multi-round, in-character conversations.
+**Simple story narrator** is a Python tool that generates narrated scenes and character-driven conversations for stories, using Large Language Models (LLMs). You provide a YAML file describing the story context, characters, and scenes; the system outputs a structured YAML file with scene narrations and multi-round, in-character conversations.
 
 ## Features
 
