@@ -1,11 +1,12 @@
+
 import logging
 import os
 from pydantic import BaseModel
 import litellm
+from dotenv import load_dotenv
 
-# Set environment variables
-os.environ["OPENAI_API_KEY"] = "2d58d17283459d2040699cd26696122f5c85a3a0053cf935e116d154af64eb79"
-os.environ["OPENAI_BASE_URL"] = "https://dummy.dev51.cbf.dev.paypalinc.com/cosmosai/llm/v1"
+# Load environment variables from .env file
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -22,13 +23,13 @@ class LLMConfig(BaseModel):
 
 def get_llm_config() -> LLMConfig:
     return LLMConfig(
-        model="gpt-4.1",
-        temperature=0.0,
+        model="gpt-5-nano",
+        temperature=1,
         max_tokens=1024,
         api_key=os.environ.get("OPENAI_API_KEY", ""),
         base_url=os.environ.get(
             "OPENAI_BASE_URL",
-            "https://aiplatform.dev51.cbf.dev.paypalinc.com/cosmosai/llm/v1"
+            ""
         ),
     )
 
