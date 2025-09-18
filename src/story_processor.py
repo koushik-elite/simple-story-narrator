@@ -148,12 +148,17 @@ class StoryProcessor:
 
         logger.info(f"Processing {len(story_input.scenes)} scenes...")
 
+        narration = None
+        previous_conversation = None
+
         for scene in story_input.scenes:
             logger.info(f"Processing scene {scene.scene_no}")
 
             conversation_rounds = scene.max_conversations if scene.max_conversations else conversation_rounds
             # Generate narration
-            narration = self.narrator.narrate_scene(story_input.context, scene)
+            narration = self.narrator.narrate_scene(
+                story_input.context, scene, narration, previous_conversation
+            )
 
             # Generate conversation
             conversation = self.conversation_manager.conduct_scene_conversation(
@@ -191,6 +196,11 @@ class StoryProcessor:
                     "character": entry["character"],
                     "text": entry["response"]
                 })
+
+                if previous_conversation:
+                    previous_conversation += f"\n{entry['character']}: {entry['response']}"
+                else:
+                    previous_conversation = f"{entry['character']}: {entry['response']}"
 
             # Add the last round
             if round_conversations:

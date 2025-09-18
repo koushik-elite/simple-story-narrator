@@ -1,3 +1,4 @@
+import textwrap
 from typing import TYPE_CHECKING, List, Dict, Any, Optional
 from models.story import Character, Scene
 import logging
@@ -32,47 +33,39 @@ class ConversationManager:
             ]
             conversation_context = "\n".join(conversation_lines)
 
-        prompt = f"""
+        character_prompt = f"""
         You are roleplaying as {character_name}.
 
         Character Details:
         - Goal: {character.goal}
         - Backstory: {character.backstory}
         - Traits: {character.traits}
-        - Current Emotional State: {character.emotional_state}
+        - Emotional State: {character.emotional_state}
 
-        Scene Details:
-        - Location: {scene.location}
-        - Atmosphere: {scene.atmosphere}
-        - Conflict: {scene.conflict}
-        - Possible Outcomes: {scene.possible_outcomes}
-        - Max Conversations Allowed: {scene.max_conversations}
-        - Current Conversation Count: {current_conversation_vs_max}
-
-        Current Scene Narration:
+        Current Scene Narration (from narrator/director):
         {narration}
 
-        Previous conversation so far:
-        {conversation_context if conversation_context else "Nothing yet."}
+        Previous Conversation in this Scene:
+        {conversation_context if conversation_context else 'Nothing yet, you are the first to speak.'}
 
         Instructions:
-        - Respond as {character_name} would, considering their goal, backstory, traits, and emotional state.
-        - React to the current scene narration and the conversation so far.
-        - Stay consistent with the scene's conflict and atmosphere.
-        - If approaching the max conversation limit, start steering the dialogue toward one of the possible outcomes.
-        - Keep your response natural and in character.
-        - Limit your response to 2 sentences.
+        - Respond as {character_name} would, considering their personality, goal, and backstory.
+        - React naturally to the narrator's description of the scene.
+        - If there is previous conversation, respond appropriately.
+        - Keep responses 2 sentences, in character.
         - Do not narrate actions, only speak as {character_name}.
-        - Always response in plain text.
+        - Be aware of pacing: this scene allows {scene.max_conversations} total turns.
+        - Current Conversation turn: {current_conversation_vs_max}
 
-        {character_name}'s response:
+        {character_name}'s Response:
         """
+        prompt = textwrap.dedent(character_prompt).strip()
         response = self.llm_client.call_llm(prompt)
         # print(prompt)
         # print("--------------------------------------------------------------------")
         # print(response)
         return response.strip().strip('"')
-    
+
     def conduct_scene_conversation(
         self,
         characters: Dict[str, "Character"],
@@ -98,13 +91,13 @@ class ConversationManager:
                     narration=narration,
                     scene=scene,
                     conversation_history=conversation,
-                    current_conversation_vs_max=f"{round_num + 1}/{conversation_rounds}"
+                    current_conversation_vs_max=f"{round_num + 1}/{conversation_rounds}",
                 )
 
                 character_entry = {
                     "round": round_num + 1,
                     "character": character_name,
-                    "response": response
+                    "response": response,
                 }
                 conversation.append(character_entry)
         return conversation
