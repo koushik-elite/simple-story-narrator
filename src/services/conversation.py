@@ -1,7 +1,9 @@
 import textwrap
 from typing import TYPE_CHECKING, List, Dict, Any, Optional
-from models.story import Character, Scene
+from models.story import Character, ConversationTurn, Scene
 import logging
+
+from prompts.characters import CharacterDialogueManager
 
 logger = logging.getLogger("conversation")
 
@@ -10,6 +12,7 @@ class ConversationManager:
     def __init__(self, llm_client):
         self.llm_client = llm_client
         self.conversation_history: List[Dict[str, str]] = []
+        self.dialogueManager = CharacterDialogueManager()
 
     def generate_character_response(
         self,
@@ -19,7 +22,7 @@ class ConversationManager:
         scene: Optional[Scene] = None,
         conversation_history: Optional[List[Dict[str, str]]] = None,
         current_conversation_vs_max: Optional[str] = None,
-    ) -> str:
+    ) -> ConversationTurn:
         """
         Generate a character’s response based on narration, their goals, backstory,
         and previous conversation history.
@@ -33,38 +36,20 @@ class ConversationManager:
             ]
             conversation_context = "\n".join(conversation_lines)
 
-        character_prompt = f"""
-        You are roleplaying as {character_name}.
-
-        Character Details:
-        - Goal: {character.goal}
-        - Backstory: {character.backstory}
-        - Traits: {character.traits}
-        - Emotional State: {character.emotional_state}
-
-        Current Scene Narration (from narrator/director):
-        {narration}
-
-        Previous Conversation in this Scene:
-        {conversation_context if conversation_context else 'Nothing yet, you are the first to speak.'}
-
-        Instructions:
-        - Respond as {character_name} would, considering their personality, goal, and backstory.
-        - React naturally to the narrator's description of the scene.
-        - If there is previous conversation, respond appropriately.
-        - Keep responses 2 sentences, in character.
-        - Do not narrate actions, only speak as {character_name}.
-        - Be aware of pacing: this scene allows {scene.max_conversations} total turns.
-        - Current Conversation turn: {current_conversation_vs_max}
-
-        {character_name}'s Response:
-        """
+        character_prompt = self.dialogueManager.get_character_conversation_prompt(
+            character,
+            narration,
+            scene,
+            conversation_context,
+            conversation_history,
+            current_conversation_vs_max,
+        )
         prompt = textwrap.dedent(character_prompt).strip()
-        response = self.llm_client.call_llm(prompt)
+        response = self.llm_client.execute_character_dialogue(prompt)
         # print(prompt)
         # print("--------------------------------------------------------------------")
         # print(response)
-        return response.strip().strip('"')
+        return response
 
     def conduct_scene_conversation(
         self,
@@ -85,7 +70,7 @@ class ConversationManager:
             for character_name in character_names:
                 character = characters[character_name]
 
-                response = self.generate_character_response(
+                response: ConversationTurn = self.generate_character_response(
                     character_name=character_name,
                     character=character,
                     narration=narration,

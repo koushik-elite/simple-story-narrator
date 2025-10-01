@@ -1,5 +1,6 @@
 import logging
 import os
+from models.story import ConversationTurn
 from pydantic import BaseModel
 import litellm
 from dotenv import load_dotenv
@@ -48,6 +49,21 @@ class LLMClient:
                 temperature=self.config.temperature,
             )
             return response.choices[0].message.content.strip()
+        except Exception as e:
+            logger.error(f"Error calling LLM: {e}")
+            return "Error generating response."
+
+    def execute_character_dialogue(self, prompt: str) -> ConversationTurn:
+        """Generate a character's dialogue based on their name and input dialogue."""
+        try:
+            response = litellm.completion(
+                model=self.config.model,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=self.config.max_tokens,
+                temperature=self.config.temperature,
+                response_format=ConversationTurn,
+            )
+            return response
         except Exception as e:
             logger.error(f"Error calling LLM: {e}")
             return "Error generating response."
