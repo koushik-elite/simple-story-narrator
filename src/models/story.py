@@ -1,5 +1,5 @@
 from typing import Dict, List, Optional, Union
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class Character(BaseModel):
     goal: str
@@ -44,13 +44,12 @@ class StoryOutput(BaseModel):
     next_steps: Optional[List[str]] = None
 
 class ConversationTurn(BaseModel):
-    character: str
-    dialogue: str
-    emotion: Optional[str] = None  # e.g., "happy", "angry"
-    tone: Optional[str] = None     # e.g., "sarcastic", "serious"
-    body_language: Optional[str] = None  # e.g., "crossed arms", "smiling"
-    inner_thoughts: Optional[str] = None  # what the character is thinking
-    narrative_description: Optional[str] = None  # actions or setting details
+    character: str = Field(description="character's name")
+    dialogue: str = Field(description="character's spoken dialogue")
+    emotion: str = Field(description="character's emotional tone. e.g. 'sad', 'angry'")
+    tone: str = Field(description="character's tone e.g. 'sarcastic', 'serious'")
+    body_language: str = Field(description="character's body language e.g. 'stepping forward with measured grace', 'armor gleaming softly', 'posture commanding yet approachable'")
+    inner_thoughts: str = Field(description="character's internal thoughts or motivations. e.g. 'I must protect them at all costs', 'This is my moment to shine'")
 
 class SceneConversation(BaseModel):
     scene_no: int

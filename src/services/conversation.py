@@ -28,27 +28,25 @@ class ConversationManager:
         and previous conversation history.
         """
         # Build conversation context
-        conversation_context = ""
-        if conversation_history:
-            conversation_lines = [
-                f"{entry['character']}: \"{entry['response']}\""
-                for entry in conversation_history
-            ]
-            conversation_context = "\n".join(conversation_lines)
+        # conversation_context = ""
+        # if conversation_history:
+        #     conversation_lines = [
+        #         f"{entry['character']}: \"{entry['response']}\""
+        #         for entry in conversation_history
+        #     ]
+        #     conversation_context = "\n".join(conversation_lines)
 
-        character_prompt = self.dialogueManager.get_character_conversation_prompt(
+        character_message = self.dialogueManager.get_character_conversation_prompt(
             character,
             narration,
             scene,
-            conversation_context,
             conversation_history,
             current_conversation_vs_max,
         )
-        prompt = textwrap.dedent(character_prompt).strip()
-        response = self.llm_client.execute_character_dialogue(prompt)
+        response = self.llm_client.execute_character_dialogue(character_message)
         # print(prompt)
-        # print("--------------------------------------------------------------------")
-        # print(response)
+        print("--------------------------------------------------------------------")
+        print(response)
         return response
 
     def conduct_scene_conversation(
@@ -62,6 +60,7 @@ class ConversationManager:
         Conduct a multi-round conversation among the given characters.
         """
         conversation = []
+        conversation_history = []
         character_names = list(characters.keys())
 
         for round_num in range(conversation_rounds):
@@ -75,16 +74,18 @@ class ConversationManager:
                     character=character,
                     narration=narration,
                     scene=scene,
-                    conversation_history=conversation,
+                    conversation_history=conversation_history,
                     current_conversation_vs_max=f"{round_num + 1}/{conversation_rounds}",
                 )
 
                 character_entry = {
                     "round": round_num + 1,
                     "character": character_name,
-                    "response": response,
+                    "response": response.dialogue,
                 }
+
                 conversation.append(character_entry)
+                conversation_history.append(response)
         return conversation
 
     def reset_conversation_history(self):

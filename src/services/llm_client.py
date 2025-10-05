@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import Dict, List
 from models.story import ConversationTurn
 from pydantic import BaseModel
 import litellm
@@ -53,17 +54,19 @@ class LLMClient:
             logger.error(f"Error calling LLM: {e}")
             return "Error generating response."
 
-    def execute_character_dialogue(self, prompt: str) -> ConversationTurn:
+    def execute_character_dialogue(self, messages: List[Dict[str, str]]) -> ConversationTurn:
         """Generate a character's dialogue based on their name and input dialogue."""
         try:
             response = litellm.completion(
                 model=self.config.model,
-                messages=[{"role": "user", "content": prompt}],
+                messages=messages,
+                messages_format="pydantic",
+
                 max_tokens=self.config.max_tokens,
                 temperature=self.config.temperature,
                 response_format=ConversationTurn,
             )
-            return response
+            return response.choices[0].message.content
         except Exception as e:
             logger.error(f"Error calling LLM: {e}")
             return "Error generating response."
