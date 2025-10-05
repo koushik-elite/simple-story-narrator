@@ -12,7 +12,7 @@ load_dotenv()
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("llm_client")
-
+litellm.enable_json_schema_validation=True
 
 class LLMConfig(BaseModel):
     model: str
@@ -60,13 +60,12 @@ class LLMClient:
             response = litellm.completion(
                 model=self.config.model,
                 messages=messages,
-                messages_format="pydantic",
-
+                # messages_format="pydantic",
                 max_tokens=self.config.max_tokens,
                 temperature=self.config.temperature,
                 response_format=ConversationTurn,
             )
-            return response.choices[0].message.content
+            return response
         except Exception as e:
             logger.error(f"Error calling LLM: {e}")
             return "Error generating response."

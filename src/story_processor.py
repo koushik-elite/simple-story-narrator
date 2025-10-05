@@ -1,10 +1,11 @@
 """
 story narrator
 
-this script take yaml input file contain story contex, characters and scenes process them 
-through the story narrator and conversation system, and outputs the 
+this script take yaml input file contain story contex, characters and scenes process them
+through the story narrator and conversation system, and outputs the
 results in a structured yaml format.
 """
+
 import sys
 import yaml
 import logging
@@ -13,7 +14,8 @@ from datetime import datetime
 from typing import Dict, List, Any
 
 # Import our story components
-from models.story import StoryInput
+from models.story import ConversationTurn, StoryInput
+from prompts.characters import CharacterDialogueManager
 from services.llm_client import LLMClient
 from services.narrator import Narrator
 from services.conversation import ConversationManager
@@ -22,11 +24,13 @@ from services.conversation import ConversationManager
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger("story_processor")
 
+
 class StoryProcessor:
     def __init__(self):
         self.llm_client = LLMClient()
         self.narrator = Narrator(self.llm_client)
         self.conversation_manager = ConversationManager(self.llm_client)
+        self.dialogueManager = CharacterDialogueManager()
 
     def load_story_config(self, yaml_file: str) -> Dict[str, Any]:
         """Load story configuration from YAML file."""
@@ -41,7 +45,7 @@ class StoryProcessor:
         except yaml.YAMLError as e:
             logger.error(f"Error parsing YAML file: {e}")
             sys.exit(1)
-    
+
     def validate_config(self, config: Dict[str, Any]) -> bool:
         """Validate the story configuration."""
         required_keys = ["context", "characters", "scenes"]
@@ -64,13 +68,21 @@ class StoryProcessor:
 
         # Validate character structure
         for char_name, char_data in config["characters"].items():
-            if not isinstance(char_data, dict) or "goal" not in char_data or "backstory" not in char_data:
+            if (
+                not isinstance(char_data, dict)
+                or "goal" not in char_data
+                or "backstory" not in char_data
+            ):
                 logger.error(f"Character {char_name} missing goal or backstory")
                 return False
 
         # Validate scene structure
         for i, scene in enumerate(config["scenes"]):
-            if not isinstance(scene, dict) or "scene_no" not in scene or "context" not in scene:
+            if (
+                not isinstance(scene, dict)
+                or "scene_no" not in scene
+                or "context" not in scene
+            ):
                 logger.error(f"Scene {i} missing 'scene_no' or 'context'")
                 return False
 
@@ -94,7 +106,9 @@ class StoryProcessor:
             logger.error(f"Error saving output file: {e}")
             sys.exit(1)
 
-    def run(self, input_file: str = "story_input.yaml", output_file: str = "output.yaml"):
+    def run(
+        self, input_file: str = "story_input.yaml", output_file: str = "output.yaml"
+    ):
         """Main processing function."""
         logger.info("Starting Story Narrator YAML Processor")
 
@@ -117,9 +131,11 @@ class StoryProcessor:
 
         # Final log summary
         logger.info("Story processing completed successfully!")
-        logger.info(f"Generated narrations for {len(output_data['scenes'])} scenes")
-        logger.info(f"Created conversations between {len(config['characters'])} characters")
-        logger.info(f"Results saved to: {output_file}")
+        # logger.info(f"Generated narrations for {len(output_data['scenes'])} scenes")
+        # logger.info(
+        #     f"Created conversations between {len(config['characters'])} characters"
+        # )
+        # logger.info(f"Results saved to: {output_file}")
 
     def process_story(self, config: Dict[str, Any]) -> Dict[str, Any]:
         """Process the story and generate narration and conversations."""
@@ -128,7 +144,7 @@ class StoryProcessor:
         story_input = StoryInput(
             context=config["context"],
             characters=config["characters"],
-            scenes=config["scenes"]
+            scenes=config["scenes"],
         )
 
         # Get configuration options
@@ -143,71 +159,85 @@ class StoryProcessor:
                 "total_scenes": len(config["scenes"]),
                 "characters": list(config["characters"].keys()),
             },
-            "scenes": []
+            "scenes": [],
         }
 
         logger.info(f"Processing {len(story_input.scenes)} scenes...")
 
-        narration = None
-        previous_conversation = None
+        narration_str = None
+        previous_conversation: List[ConversationTurn] = None
 
         for scene in story_input.scenes:
             logger.info(f"Processing scene {scene.scene_no}")
 
-            conversation_rounds = scene.max_conversations if scene.max_conversations else conversation_rounds
-            # Generate narration
-            narration = self.narrator.narrate_scene(
-                story_input.context, scene, narration, previous_conversation
+            conversation_rounds = (
+                scene.max_conversations
+                if scene.max_conversations
+                else conversation_rounds
             )
 
+            # Generate narration
+            # narration_str = self.narrator.narrate_scene(
+            #     story_input.context, scene, narration_str, previous_conversation
+            # )
+
+            narration_str = "dummy narration"  # REMOVE AFTER TESTING
             # Generate conversation
-            conversation = self.conversation_manager.conduct_scene_conversation(
-                characters=story_input.characters,
-                narration=narration,
-                scene=scene,
-                conversation_rounds=conversation_rounds,
+            previous_conversation = (
+                self.conversation_manager.conduct_scene_conversation(
+                    characters=story_input.characters,
+                    narration=narration_str,
+                    scene=scene,
+                    conversation_rounds=conversation_rounds,
+                )
             )
 
             # Structure the scene output
             scene_output = {
                 "scene_no": scene.scene_no,
                 "context": scene.context,
-                "narration": {
-                    "narrator": narration
-                },
-                "conversations": []
+                "narration": narration_str,
+                "conversations": [],
             }
 
+            for entry in previous_conversation:
+                scene_output["conversations"].append(
+                    {
+                        "character": entry.character,
+                        "text": self.conversation_manager.to_rich_format(entry),
+                    }
+                )
+
             # Group conversations by round
-            current_round = 1
-            round_conversations = []
+            # current_round = 1
+            # round_conversations = []
 
-            for entry in conversation:
-                if entry["round"] != current_round:
-                    if round_conversations:
-                        scene_output["conversations"].append({
-                            "round": current_round,
-                            "exchanges": round_conversations
-                        })
-                    current_round = entry["round"]
-                    round_conversations = []
+            # for entry in conversation:
+            #     if entry["round"] != current_round:
+            #         if round_conversations:
+            #             scene_output["conversations"].append({
+            #                 "round": current_round,
+            #                 "exchanges": round_conversations
+            #             })
+            #         current_round = entry["round"]
+            #         round_conversations = []
 
-                round_conversations.append({
-                    "character": entry["character"],
-                    "text": entry["response"]
-                })
+            #     round_conversations.append({
+            #         "character": entry["character"],
+            #         "text": entry["response"]
+            #     })
 
-                if previous_conversation:
-                    previous_conversation += f"\n{entry['character']}: {entry['response']}"
-                else:
-                    previous_conversation = f"{entry['character']}: {entry['response']}"
+            #     if previous_conversation:
+            #         previous_conversation += f"\n{entry['character']}: {entry['response']}"
+            #     else:
+            #         previous_conversation = f"{entry['character']}: {entry['response']}"
 
             # Add the last round
-            if round_conversations:
-                scene_output["conversations"].append({
-                    "round": current_round,
-                    "exchanges": round_conversations
-                })
+            # if round_conversations:
+            #     scene_output["conversations"].append({
+            #         "round": current_round,
+            #         "exchanges": round_conversations
+            #     })
 
             # Append this scene to output
             output_data["scenes"].append(scene_output)
@@ -217,6 +247,7 @@ class StoryProcessor:
 
         logger.info("Story processing completed")
         return output_data
+
 
 def main():
     """Command line entry point."""

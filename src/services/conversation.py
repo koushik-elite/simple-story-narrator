@@ -16,8 +16,8 @@ class ConversationManager:
 
     def generate_character_response(
         self,
-        character_name: str,
-        character: "Character",
+        name: str,
+        character: Character,
         narration: str,
         scene: Optional[Scene] = None,
         conversation_history: Optional[List[Dict[str, str]]] = None,
@@ -37,6 +37,7 @@ class ConversationManager:
         #     conversation_context = "\n".join(conversation_lines)
 
         character_message = self.dialogueManager.get_character_conversation_prompt(
+            name,
             character,
             narration,
             scene,
@@ -51,11 +52,11 @@ class ConversationManager:
 
     def conduct_scene_conversation(
         self,
-        characters: Dict[str, "Character"],
+        characters: Dict[str, Character],
         narration: str,
         scene: Optional[Scene] = None,
         conversation_rounds: int = 2,
-    ) -> List[Dict[str, str]]:
+    ) -> List[ConversationTurn]:
         """
         Conduct a multi-round conversation among the given characters.
         """
@@ -67,10 +68,12 @@ class ConversationManager:
             logger.info(f"Starting conversation round {round_num + 1}")
 
             for character_name in character_names:
-                character = characters[character_name]
+                print(characters[character_name])
+                # If it's already a Character instance, use it directly
+                character = characters[character_name] if isinstance(characters[character_name], Character) else Character(**characters[character_name])
 
                 response: ConversationTurn = self.generate_character_response(
-                    character_name=character_name,
+                    name=character_name,
                     character=character,
                     narration=narration,
                     scene=scene,
@@ -86,7 +89,8 @@ class ConversationManager:
 
                 conversation.append(character_entry)
                 conversation_history.append(response)
-        return conversation
+
+        return conversation_history
 
     def reset_conversation_history(self):
         """Reset the conversation history."""

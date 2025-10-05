@@ -1,7 +1,6 @@
-from ast import List
 import textwrap
-from typing import Dict, Optional
-from models.agents import Character, Scene
+from typing import Dict, List, Optional
+from models.story import Character, Scene
 from models.story import ConversationTurn
 
 
@@ -9,17 +8,37 @@ class CharacterDialogueManager:
     def __init__(self):
         pass
 
+    def to_rich_format(self, turn: ConversationTurn) -> str:
+        parts = []
+
+        # Character name with body language
+        character_line = ""
+        if turn.body_language:
+            character_line += f" ({turn.body_language})"
+        character_line += ":"
+        parts.append(character_line)
+
+        # Dialogue
+        parts.append(f'"{turn.dialogue}"')
+
+        # Inner thoughts (optional, in italics)
+        if turn.inner_thoughts:
+            parts.append(f"\n*[Inner thought: {turn.inner_thoughts}]*")
+
+        return " ".join(parts)
+
     def get_character_conversation_prompt(
         self,
+        name: str,
         character: Character,
         narration: str,
         scene: Optional[Scene] = None,
         conversation_history: Optional[List[ConversationTurn]] = None,
         current_conversation_vs_max: Optional[str] = None,
     ) -> List[Dict[str, str]]:
-        
+
         message = []
-        
+
         system_propmt = f"""
         You are an AI language model designed to roleplay as fictional characters in a story.
         Your task is to generate dialogue for a specific character based on their personality, goals, backstory,
@@ -36,13 +55,19 @@ class CharacterDialogueManager:
         - Be aware of pacing: this scene allows {scene.max_conversations} total turns.
         - Current Conversation turn: {current_conversation_vs_max}
         """
-        message.push({"role": "system", "content": textwrap.dedent(system_propmt).strip()})
+        message.append(
+            {"role": "system", "content": textwrap.dedent(system_propmt).strip()}
+        )
 
         for entry in conversation_history or []:
-            message.append({"role": entry.character, "content": entry.dialogue})
+            message.append(
+                {"role": entry.character, "content": self.to_rich_format(entry)}
+            )
 
+        print(character)
+        
         character_prompt = f"""
-        You are roleplaying as {character.name}.
+        You are roleplaying as {name}.
 
         Character Details:
         - Goal: {character.goal}
@@ -50,9 +75,14 @@ class CharacterDialogueManager:
         - Traits: {character.traits}
         - Emotional State: {character.emotional_state}
 
-        {character.name}'s Response:
+        {name}'s Response:
         """
 
-        message.append({"role": character.name, "content": textwrap.dedent(character_prompt).strip()})
+        message.append(
+            {
+                "role": "user",
+                "content": textwrap.dedent(character_prompt).strip(),
+            }
+        )
 
         return message
