@@ -44,10 +44,12 @@ class ConversationManager:
             conversation_history,
             current_conversation_vs_max,
         )
+        print(character_message)
         response = self.llm_client.execute_character_dialogue(character_message)
         # print(prompt)
         print("--------------------------------------------------------------------")
         print(response)
+        # model = ConversationTurn.model_validate(response.message.content)
         return response
 
     def conduct_scene_conversation(
@@ -56,6 +58,7 @@ class ConversationManager:
         narration: str,
         scene: Optional[Scene] = None,
         conversation_rounds: int = 2,
+        init_conversation: List[ConversationTurn] = None
     ) -> List[ConversationTurn]:
         """
         Conduct a multi-round conversation among the given characters.
@@ -63,6 +66,9 @@ class ConversationManager:
         conversation = []
         conversation_history = []
         character_names = list(characters.keys())
+
+        if init_conversation and len(init_conversation) > 0:
+            conversation_history = init_conversation
 
         for round_num in range(conversation_rounds):
             logger.info(f"Starting conversation round {round_num + 1}")

@@ -17,14 +17,20 @@ class Narrator:
         self.llm_client = llm_client
         self.dialogueManager = CharacterDialogueManager()
 
-    def narrate_scene(self, context: str, scene: 'Scene', previous_narration: str = None, previous_conversation: List[ConversationTurn] = None) -> str:
+    def narrate_scene(
+        self,
+        context: str,
+        scene: "Scene",
+        previous_narration: str = None,
+        previous_conversation: List[ConversationTurn] = None,
+    ) -> str:
         """Generate narration for a given scene."""
 
         previous_conversation_str = ""
         if previous_conversation:
             previous_conversation_str = "\n".join(
                 [
-                    f"**{turn.character}**: {self.dialogueManager.to_rich_format(turn)}"
+                    self.dialogueManager.to_rich_format(turn)
                     for turn in previous_conversation
                 ]
             )
@@ -37,6 +43,8 @@ class Narrator:
             Objective:
             - Given the story context, the current scene, and past developments, narrate the scene in a captivating way.
             - Ensure narration flows naturally from prior events and conversations.
+            - Use vivid descriptions, sensory details, and emotional cues to enhance the storytelling.
+            - Keep narration concise yet evocative, ideally 3-4 sentences.
 
             Story Context:
             {context}
@@ -59,10 +67,9 @@ class Narrator:
 
             Narrator's Response:
             """
-        
+
         prompt = textwrap.dedent(narrator_prompt).strip()
         response = self.llm_client.call_llm(prompt)
-        # print("--------------------------------------------------------------------")
+
         # print(response)
         return response
-

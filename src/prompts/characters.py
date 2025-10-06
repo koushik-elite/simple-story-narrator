@@ -12,7 +12,7 @@ class CharacterDialogueManager:
         parts = []
 
         # Character name with body language
-        character_line = ""
+        character_line = f"**{turn.character}**"
         if turn.body_language:
             character_line += f" ({turn.body_language})"
         character_line += ":"
@@ -52,8 +52,6 @@ class CharacterDialogueManager:
         - React naturally to the narrator's description of the scene.
         - If there is previous conversation, respond appropriately.
         - Keep responses concise, ideally 2 sentences, and avoid narrating actions unless specified.
-        - Be aware of pacing: this scene allows {scene.max_conversations} total turns.
-        - Current Conversation turn: {current_conversation_vs_max}
         """
         message.append(
             {"role": "system", "content": textwrap.dedent(system_propmt).strip()}
@@ -61,7 +59,7 @@ class CharacterDialogueManager:
 
         for entry in conversation_history or []:
             message.append(
-                {"role": entry.character, "content": self.to_rich_format(entry)}
+                {"role": "assistant", "content": self.to_rich_format(entry)}
             )
 
         print(character)

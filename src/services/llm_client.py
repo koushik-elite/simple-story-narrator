@@ -4,7 +4,9 @@ from typing import Dict, List
 from models.story import ConversationTurn
 from pydantic import BaseModel
 import litellm
+from litellm import completion
 from dotenv import load_dotenv
+import instructor
 
 # Load environment variables from .env file
 load_dotenv()
@@ -13,6 +15,8 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("llm_client")
 litellm.enable_json_schema_validation=True
+
+
 
 class LLMConfig(BaseModel):
     model: str
@@ -38,6 +42,7 @@ class LLMClient:
         # Configure litellm with custom base URL
         litellm.api_base = self.config.base_url
         litellm.api_key = self.config.api_key
+        self.client = instructor.from_litellm(completion)
         print(self.config.base_url)
 
     def call_llm(self, prompt: str) -> str:
@@ -57,15 +62,23 @@ class LLMClient:
     def execute_character_dialogue(self, messages: List[Dict[str, str]]) -> ConversationTurn:
         """Generate a character's dialogue based on their name and input dialogue."""
         try:
-            response = litellm.completion(
+            # response = litellm.completion(
+            #     model=self.config.model,
+            #     messages=messages,
+            #     # messages_format="pydantic",
+            #     max_tokens=self.config.max_tokens,
+            #     temperature=self.config.temperature,
+            #     response_format=ConversationTurn,
+            # )
+            return self.client.chat.completions.create(
                 model=self.config.model,
-                messages=messages,
-                # messages_format="pydantic",
                 max_tokens=self.config.max_tokens,
                 temperature=self.config.temperature,
-                response_format=ConversationTurn,
+                response_model=ConversationTurn,
+                messages=messages,
+                max_retries=3,
             )
-            return response
+            # return response
         except Exception as e:
             logger.error(f"Error calling LLM: {e}")
             return "Error generating response."

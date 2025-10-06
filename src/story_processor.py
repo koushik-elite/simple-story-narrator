@@ -145,6 +145,7 @@ class StoryProcessor:
             context=config["context"],
             characters=config["characters"],
             scenes=config["scenes"],
+            initial_conversation=config.get("initial_conversation", [])
         )
 
         # Get configuration options
@@ -166,6 +167,11 @@ class StoryProcessor:
 
         narration_str = None
         previous_conversation: List[ConversationTurn] = None
+        init_conversation: List[ConversationTurn] = []
+
+        for init_conv in story_input.initial_conversation or []:
+            turn = ConversationTurn.model_validate(init_conv)
+            init_conversation.append(turn)
 
         for scene in story_input.scenes:
             logger.info(f"Processing scene {scene.scene_no}")
@@ -176,12 +182,15 @@ class StoryProcessor:
                 else conversation_rounds
             )
 
-            # Generate narration
-            # narration_str = self.narrator.narrate_scene(
-            #     story_input.context, scene, narration_str, previous_conversation
-            # )
+            # if init_conversation and len(init_conversation) > 0:
+            #     previous_conversation = init_conversation
 
-            narration_str = "dummy narration"  # REMOVE AFTER TESTING
+            # Generate narration
+            narration_str = self.narrator.narrate_scene(
+                story_input.context, scene, narration_str, previous_conversation
+            )
+
+            # narration_str = "dummy narration"  # REMOVE AFTER TESTING
             # Generate conversation
             previous_conversation = (
                 self.conversation_manager.conduct_scene_conversation(
@@ -189,6 +198,7 @@ class StoryProcessor:
                     narration=narration_str,
                     scene=scene,
                     conversation_rounds=conversation_rounds,
+                    init_conversation=init_conversation
                 )
             )
 
@@ -198,14 +208,13 @@ class StoryProcessor:
                 "context": scene.context,
                 "narration": narration_str,
                 "conversations": [],
+                "conversations_formatted": [],
             }
 
             for entry in previous_conversation:
-                scene_output["conversations"].append(
-                    {
-                        "character": entry.character,
-                        "text": self.conversation_manager.to_rich_format(entry),
-                    }
+                scene_output["conversations"].append(entry.model_dump())
+                scene_output["conversations_formatted"].append(
+                    self.dialogueManager.to_rich_format(entry)
                 )
 
             # Group conversations by round
@@ -243,6 +252,8 @@ class StoryProcessor:
             output_data["scenes"].append(scene_output)
 
             # Reset conversation history for next scene
+            previous_conversation = []
+            init_conversation = []
             self.conversation_manager.reset_conversation_history()
 
         logger.info("Story processing completed")

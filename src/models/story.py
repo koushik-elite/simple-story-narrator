@@ -16,7 +16,7 @@ class Scene(BaseModel):
     context: str
     conflict: Optional[str] = None
     possible_outcomes: Optional[List[str]] = None
-    narrator_prompt: Optional[str] = None
+    # narrator_prompt: Optional[str] = None
     themes: Optional[List[str]] = None
     max_conversations: Optional[int] = None
     description: Optional[str] = None  # extra narrative details
@@ -34,6 +34,7 @@ class StoryInput(BaseModel):
     characters: Dict[str, Character]
     scenes: List[Scene]
     config: Optional[Config] = None
+    initial_conversation: Optional[List[Dict[str, Union[str, int]]]] = None
 
 class StoryOutput(BaseModel):
     dialogues: Dict[str, List[str]]  # character name to list of dialogues
